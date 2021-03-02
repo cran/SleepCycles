@@ -5,6 +5,16 @@ The SleepCycles package
 
 ## News
 
+### SleepCycles 1.0.2 (2021-18-02)
+
+Bug fix: the load\_prep.R function resulted in an error when input files
+had less than two columns, this has been fixed. Bug fix: in the unlikely
+event that there is only one REM sleep episode, the code resulted in an
+error. This has been fixed. Enhancement: the user can now also specify
+csv files as input files to the SleepCycles() function. Enhancement: the
+user can now specify in the ‘sleepstart’ argument whether the first
+NREMP of a night should start with N1 (default) or N2.
+
 ### SleepCycles 1.0.1 (2020-02-12)
 
 No changes since version 0.8. This is the first version available on

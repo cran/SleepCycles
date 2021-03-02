@@ -10,12 +10,12 @@ load_data <- function(filetype, filename, treat_as_W, treat_as_N3, hd, sp){
     cycles[,1] <- "SleepCycle"
     cycles[,2] <- NA
     cycles$SleepStages <- data$Description
-  }else if (filetype == "txt"){
+  }else if (filetype == "txt" | filetype == "csv" ){ # csv files were added on 17/02/21
     if (hd == "y"){ # does it have a header?
       data <- read.table(filename, header = TRUE, sep = sp)
       for (z in 1:ncol(data)){
         if (length(unique(data[,z])) == 5){
-          if (all(data[,2] %in% c(0,1,2,3,5))){
+          if (all(data[,z] %in% c(0,1,2,3,5))){ # bug fix 17/02/21: used to be if (all(data[,2] %in% c(0,1,2,3,5))){
             colnames(data)[z] <- "Description"
             cycles <- data
             cycles$SleepStages <- data$Description
@@ -24,7 +24,7 @@ load_data <- function(filetype, filename, treat_as_W, treat_as_N3, hd, sp){
             break
           }
         }else if (length(unique(data[,z])) == 6){
-          if (all(data[,2] %in% na.omit(c(0,1,2,3,5,treat_as_W, treat_as_N3)))){
+          if (all(data[,z] %in% na.omit(c(0,1,2,3,5,treat_as_W, treat_as_N3)))){
             colnames(data)[z] <- "Description"
             cycles <- data
             cycles$SleepStages <- data$Description
@@ -35,7 +35,7 @@ load_data <- function(filetype, filename, treat_as_W, treat_as_N3, hd, sp){
             stop("Please check your file. The vector with the staging seems to contain other numbers than the sleep stages or the numbers you want to treat as a sleep stage.")
           }
         }else if (length(unique(data[,z])) == 7){
-          if (all(data[,2] %in% na.omit(c(0,1,2,3,5,treat_as_W, treat_as_N3)))){
+          if (all(data[,z] %in% na.omit(c(0,1,2,3,5,treat_as_W, treat_as_N3)))){
             colnames(data)[z] <- "Description"
             cycles <- data
             cycles$SleepStages <- data$Description
@@ -47,11 +47,11 @@ load_data <- function(filetype, filename, treat_as_W, treat_as_N3, hd, sp){
           }
         }
       }
-    }else{
+    }else if (hd == "n"){ # does it have a header?{
       data <- read.table(filename, header = FALSE, sep = sp)
       for (z in 1:ncol(data)){
         if (length(unique(data[,z])) == 5){
-          if (all(data[,2] %in% c(0,1,2,3,5))){
+          if (all(data[,z] %in% c(0,1,2,3,5))){
             colnames(data)[z] <- "Description"
             cycles <- data
             cycles$SleepStages <- data$Description
@@ -60,7 +60,7 @@ load_data <- function(filetype, filename, treat_as_W, treat_as_N3, hd, sp){
             break
           }
         }else if (length(unique(data[,z])) == 6){
-          if (all(data[,2] %in% na.omit(c(0,1,2,3,5,treat_as_W, treat_as_N3)))){
+          if (all(data[,z] %in% na.omit(c(0,1,2,3,5,treat_as_W, treat_as_N3)))){
             colnames(data)[z] <- "Description"
             cycles <- data
             cycles$SleepStages <- data$Description
@@ -71,7 +71,7 @@ load_data <- function(filetype, filename, treat_as_W, treat_as_N3, hd, sp){
             stop("Please check your file. The vector with the staging seems to contain other numbers than the sleep stages or the numbers you want to treat as a sleep stage.")
           }
         }else if (length(unique(data[,z])) == 7){
-          if (all(data[,2] %in% na.omit(c(0,1,2,3,5,treat_as_W, treat_as_N3)))){
+          if (all(data[,z] %in% na.omit(c(0,1,2,3,5,treat_as_W, treat_as_N3)))){
             colnames(data)[z] <- "Description"
             cycles <- data
             cycles$SleepStages <- data$Description
@@ -145,17 +145,24 @@ find_REMPs <- function(REMs, REMP_length, data){
   ## Find REM episodes (first can be <5min, others have to be at least 5min)
   REMs <- which(data$Descr3 == "REM") #which 30s epochs are REM
   REMs_start <- REMs[1] #set first REM epoch as beginning of first REMP as there's no duration criterion for first REMP
-  for (k in 1:(length(REMs)-(REMP_length-1))){
-    if (all(seq(REMs[k],length.out = REMP_length) == REMs[seq(k,k+(REMP_length-1))])){ # check if the sequence of min. 10 REM epochs is continuous
-      REMs_start <- c(REMs_start, REMs[k])
+  
+  # now check other potential REMPs regarding their length
+  if ((length(REMs)-(REMP_length-1)) >=0){ #added 17/02/21 to prevent code from crashing in unlikely case that there is no REMP after first
+    for (k in 1:(length(REMs)-(REMP_length-1))){
+      if (all(seq(REMs[k],length.out = REMP_length) == REMs[seq(k,k+(REMP_length-1))])){ # check if the sequence of min. 10 REM epochs is continuous
+        REMs_start <- c(REMs_start, REMs[k])
+      }
     }
+    REMs_start <- unique(REMs_start)
   }
-  REMs_start <- unique(REMs_start)
   
   REMs_start2 <- REMs_start[1]  #REMs_start[1] = start of the first REMP (no duration criterion)
-  for (k in 1:(length(REMs_start)-1)){
-    if ((REMs_start[k+1]-REMs_start[k])>1){
-      REMs_start2 <- c(REMs_start2, REMs_start[k+1]) #if there is an discontinuity in the sequence, mark the beginning of a new NREM sequence
+  
+  if (length(REMs_start) > 1){ # only check for more REMPs if there is more than 1 potential REMP
+    for (k in 1:(length(REMs_start)-1)){
+      if ((REMs_start[k+1]-REMs_start[k])>1){
+        REMs_start2 <- c(REMs_start2, REMs_start[k+1]) #if there is an discontinuity in the sequence, mark the beginning of a new REM period
+      }
     }
   }
   return(REMs_start2)

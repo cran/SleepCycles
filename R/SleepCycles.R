@@ -1,7 +1,7 @@
 #' @title Sleep Cycle Detection  
 #'
 #' @description Sleep cycles are largely detected according to the originally proposed criteria by Feinberg & Floyd (1979) and as described in Blume & Cajochen (2020) \doi{10.31219/osf.io/r2q8v} from sleep staging results. 
-#' NREM periods are periods starting with N1 (or W following a REM period) with a minimal duration of 15min (can include W, up to <5min REM, except for the first REMP, 
+#' NREM periods are periods starting with N1 (default) or N2 at the beginning of the night and W or another NREM stage following a REM period. NREMPs have a minimal duration of 15min (can include W, up to <5min REM, except for the first REMP, 
 #' for which there is no minimum duration criterion). REM following a NREM period always represents a potential REM period (REMP), however any REMP must be at least
 #' 5min (except the first REMP, for which no minimum duration criterion is applied). If a NREMP exceeds 120min in duration (excl. wake), it can be split into 2 parts. 
 #' The new cycle then starts with the first N3 episode following a phase (>12min) with any other stage than N3, that is
@@ -13,7 +13,7 @@
 #' The function requires any sleep staging results file with a column, in which the sleep stages are coded 
 #' in the usual 0,1,2,3,5 (i.e., W, N1, N2, N3, REM) pattern (i.e., a numeric vector). The user can define other integers to be handled as W or N3
 #' (i.e. in the case stagings were done according to the Rechtschaffen and Kales criteria including S3 and S4). The presence of further columns in the data is not an issue.
-#' Staging must be in 30s epochs. Besides text files, it can also handle marker files for the Brain Vision Analyzer (filetype = "txt" (default) or "vmrk").
+#' Staging must be in 30s epochs. Besides text files, it can also handle csv files and marker files for the Brain Vision Analyzer (filetype = "txt" (default), "csv", or "vmrk").
 
 #' @details Besides sleep cycles (NREM-REM), the result also splits the NREM and REM parts of each cycle in percentiles. 
 #' In case the length of a period is not divisible by 10 (e.g., 203 epochs), one epoch is added to percentiles in a randomized fashion to reach the correct 
@@ -31,12 +31,13 @@
 #' 
 #' @references Feinberg, I. and Floyd, T.C. (1979), Systematic Trends Across the Night in Human Sleep Cycles. Psychophysiology, 16: 283-291. https://doi.org/10.1111/j.1469-8986.1979.tb02991.x
 #' @references Rudzik, F., Thiesse, L., Pieren, R., Heritier, H., Eze I.C., Foraster, M., Vienneau, D., Brink, M., Wunderli, J.M., Probst-Hensch, N., Roeoesli, M., Fulda, S., Cajochen, C. (2020). Ultradian modulation of cortical arousals during sleep: effects of age and exposure to nighttime transportation noise. Sleep, Volume 43, Issue 7. https://doi.org/10.1093/sleep/zsz324
-#' @references Jenni, O.E., Carskadon, M.A.. (2004). Spectral Analysis of the Sleep Electroencephalogram During Adolescence. Sleep, Volume 27, Issue 4, Pages 774-783. https://doi.org/10.1093/sleep/27.4.774
+#' @references Jenni, O.E., Carskadon, M.A. (2004). Spectral Analysis of the Sleep Electroencephalogram During Adolescence. Sleep, Volume 27, Issue 4, Pages 774-783. https://doi.org/10.1093/sleep/27.4.774
 #' @references Kurth, S., Ringli, M., Geiger, A., LeBourgeois, M., Jenni, O.G., Huber, R. (2010). Mapping of Cortical Activity in the First Two Decades of Life: A High-Density Sleep Electroencephalogram Study. Journal of Neuroscience. 30 (40) 13211-13219; DOI: 10.1523/JNEUROSCI.2532-10.2010 
 #'
 #' @param p character vector indicating the directory containing the sleep staging files
+#' @param sleepstart character vector indicating whether the first NREMP at the beginning of the night should start with N1 or N2. Default: N1
 #' @param files numeric vector indicating which files in 'p' to process. Default: NA
-#' @param filetype character indicating file type of the files containing the sleep staging results. Can be "txt" (default) or "vmrk" (i.e., marker files for Brain Vision Analyzer Software).
+#' @param filetype character indicating file type of the files containing the sleep staging results. Can be "txt" (default) or "csv", or "vmrk" (i.e., marker files for Brain Vision Analyzer Software).
 #' @param treat_as_W numeric vector indicating which values should be treated as 'wake'. Default: NA
 #' @param treat_as_N3 numeric vector indicating which values should be treated as 'N3'. Default: NA
 #' @param rm_incomplete_period logical: should incomplete period at the end of the night be removed? Default: FALSE.
@@ -76,7 +77,7 @@
 #' }
 #'
 #' @export
-SleepCycles <- function(p, files = NA, filetype = "txt", treat_as_W = NA, treat_as_N3 = NA, rm_incomplete_period = FALSE, plot = TRUE, REMP_length = 10){
+SleepCycles <- function(p, sleepstart = "N1", files = NA, filetype = "txt", treat_as_W = NA, treat_as_N3 = NA, rm_incomplete_period = FALSE, plot = TRUE, REMP_length = 10){
 
   # # --- set a few things
   oldwd <- getwd()
@@ -101,9 +102,22 @@ SleepCycles <- function(p, files = NA, filetype = "txt", treat_as_W = NA, treat_
   }else if (filetype == "txt"){
     d <- list.files(p, pattern = "*.txt")
     hd <- readline("Do your files have a header with column names (y/n)? ") #check if first line contains column names
-    sp <- readline("Which separator do the files have? Choose one of the following: , or ; or tabulator.") #check which separator is used
+    sp <- readline("Which separator do the files have? Choose one of the following: NA or , or ; or tabulator. If the data only contains one column, write NA.") #check which separator is used
     if (sp == "tabulator"){
       sp = "\t"
+    }
+    if (sp == "NA"){
+      sp = ""
+    }
+  }else if (filetype == "csv"){
+    d <- list.files(p, pattern = "*.csv") # csv files were added on 17/02/21
+    hd <- readline("Do your files have a header with column names (y/n)? ") #check if first line contains column names
+    sp <- readline("Which separator do the files have? Choose one of the following: , or ; or tabulator. If the data only contains one column, write NA.") #check which separator is used
+    if (sp == "tabulator"){
+      sp = "\t"
+    }
+    if (sp == "NA"){
+      sp = ""
     }
   }
   
@@ -136,7 +150,14 @@ SleepCycles <- function(p, files = NA, filetype = "txt", treat_as_W = NA, treat_
     # Find NREM periods: start with N1 and can then also include W. >=15min
     NREMWs <- which(data$Descr3 == "NREM"| data$Descr3 == "W") #which 30s epochs are NREM or wake
     NREMs <- which(data$Descr3 == "NREM")
-    NREMWs <- subset(NREMWs, NREMWs >= NREMs[1]) # exclude W at the beginning of the night before the first NREM epoch
+    first_N2 <- which(data$Description == 2)[1] # for option to have first NREMP start with N2
+    
+    # exclude W or W/N1 at the beginning of the night before the first NREM epoch
+    if (sleepstart == "N1"){
+      NREMWs <- subset(NREMWs, NREMWs >= NREMs[1]) 
+    }else if (sleepstart == "N2"){
+      NREMWs <- subset(NREMWs, NREMWs >= first_N2) 
+    }
     
     ## Loop through NREMWs 
     # check if the sequence of NREWM is continuous and the period is >=15min AND beginning is not wake -> first NREMP
