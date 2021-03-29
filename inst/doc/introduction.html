@@ -41,7 +41,14 @@ document.addEventListener('DOMContentLoaded', function() {
     </style>
 
 
-<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
 <style type="text/css" data-origin="pandoc">
 code.sourceCode > span { display: inline-block; line-height: 1.25; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -334,11 +341,11 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <p>The SleepCycles package and its main function <code>SleepCycles()</code> is designed to detect sleep cycles and their respective NREM and REM parts (called (N)REM periods) from data that has been sleep staged according to AASM criteria. Additionally, each (N)REM part is split into percentiles. The function results in a plot visualising the results and creates a text file so the results can be used for further processing.</p>
 <div id="detection-of-sleep-cycles" class="section level3">
 <h3>Detection of sleep cycles</h3>
-<p>Sleep cycles are largely detected according to the originally proposed criteria by Feinberg &amp; Floyd (1979) and as described in Blume &amp; Cajochen (2020) . NREM periods are periods starting with N1 (or W following a REM period) with a minimal duration of 15min (can include W, up to &lt;5min REM, except for the first REMP, for which there is no minimum duration criterion). REM following a NREM period always represents a potential REM period, however any REMP must be at least 5min long (except the first REMP, for which no minimum duration criterion is applied). If a NREMP exceeds 120min in duration (excl. wake), it can be split into 2 parts. The new cycle starts with the first N3 episode following a phase (&gt;12min) with any other stage than N3, that is a lightening of sleep (cf. Rudzik et al., 2020; Jenni et al., 2004; Kurth et al., 2010). The function makes suggestions where splitting could be done according to these criteria and visualises the potential splitting points on top of a hypnogram. The user can then interactively choose where to split the NREMP. However, the code also offers the possibility to provide a numeric value for an epoch at which to split or you can also decide to not split at all. A combination of a NREMP and the following REMP represents one sleep cycle, except for the case when a NREMP is split. In this case, the first of the two resulting NREMPs represents a sleep cycle (without REM).</p>
+<p>Sleep cycles are largely detected according to the originally proposed criteria by Feinberg &amp; Floyd (1979) and as described in Blume &amp; Cajochen (2021) . NREM periods are periods starting with N1 (default) or N2 at the beginning of the night and W or another NREM stage following a REM period. NREMPs have a minimal duration minimal duration of 15min (can include W, up to &lt;5min REM, except for the first REMP, for which there is no minimum duration criterion). REM following a NREM period always represents a potential REM period, however any REMP must be at least 5min long (except the first REMP, for which no minimum duration criterion is applied). If a NREMP exceeds 120min in duration (excl. wake), it can be split into 2 parts. The new cycle starts with the first N3 episode following a phase (&gt;12min) with any other stage than N3, that is a lightening of sleep (cf. Rudzik et al., 2020; Jenni et al., 2004; Kurth et al., 2010). The function makes suggestions where splitting could be done according to these criteria and visualises the potential splitting points on top of a hypnogram. The user can then interactively choose where to split the NREMP. However, the code also offers the possibility to provide a numeric value for an epoch at which to split or you can also decide to not split at all. A combination of a NREMP and the following REMP represents one sleep cycle, except for the case when a NREMP is split. In this case, the first of the two resulting NREMPs represents a sleep cycle (without REM).</p>
 </div>
 <div id="requirements" class="section level3">
 <h3>Requirements</h3>
-<p>The function requires any sleep staging results file with a column, in which the sleep stages are coded in the usual numeric 0,1,2,3,5 (i.e., W, N1, N2, N3, REM) pattern (i.e., a numeric vector). The user can define other integers to be handled as W or N3 (i.e. in the case stagings were done according to the Rechtschaffen &amp; Kales criteria including S3 and S4). The presence of further columns, e.g. a ‘time’ column, is not an issue. Staging must be in 30s epochs. Besides text files, the <code>SleepCycles()</code> function can also handle marker files for the Brain Vision Analyzer. The input file type can be indicated with the <code>filetype</code> argument (<code>filetype = &quot;txt&quot;</code> (default) or <code>filetype = &quot;vmrk&quot;</code>).</p>
+<p>The function requires any sleep staging results file with a column, in which the sleep stages are coded in the usual numeric 0,1,2,3,5 (i.e., W, N1, N2, N3, REM) pattern (i.e., a numeric vector). The user can define other integers to be handled as W or N3 (i.e. in the case stagings were done according to the Rechtschaffen &amp; Kales criteria including S3 and S4). The presence of further columns, e.g. a ‘time’ column, is not an issue. Staging must be in 30s epochs. Besides text files, the <code>SleepCycles()</code> function can also handle csv and marker files for the Brain Vision Analyzer. The input file type can be indicated with the <code>filetype</code> argument (<code>filetype = &quot;txt&quot;</code> (default) or <code>filetype = &quot;csv&quot;</code> or <code>filetype = &quot;vmrk&quot;</code>).</p>
 <div id="details" class="section level4">
 <h4>Details</h4>
 <p>Besides sleep cycles (NREM-REM), the result also splits the NREM and REM parts of each cycle in percentiles. In case the length of a period is not divisible by 10 (e.g., 203 epochs), one epoch is added to percentiles in a randomized fashion to reach the correct length of a period (here: 7 percentiles of 20 epochs, 3 of 21 epochs).</p>
@@ -350,18 +357,18 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <div id="arguments-in-sleepcycle-function" class="section level4">
 <h4>Arguments in SleepCycle function</h4>
 <p><code>p</code> character vector indicating the directory containing the sleep staging files<br />
-<code>files</code> numeric vector indicating which files in ‘p’ to process. Default: NA<br />
-<code>filetype</code> character indicating file type of the files containing the sleep staging results. Can be “txt” (default) or “vmrk” (i.e., marker files for Brain Vision Analyzer Software).<br />
+<code>sleepstart</code> character vector indicating whether the first NREMP at the beginning of the night should start with N1 or N2. Default: N1 <code>files</code> numeric vector indicating which files in ‘p’ to process. Default: NA<br />
+<code>filetype</code> character indicating file type of the files containing the sleep staging results. Can be “txt” (default) or “csv” or “vmrk” (i.e., marker files for Brain Vision Analyzer Software).<br />
 <code>treat_as_W</code> numeric vector indicating which values should be treated as ‘wake’. Default: NA<br />
 <code>treat_as_N3</code> numeric vector indicating which values should be treated as ‘N3’. Default: NA<br />
-<code>rm_incomplete_period</code> logical: should incomplete period at the end of the night be removed? Default: F.<br />
+<code>rm_incomplete_period</code> logical: should incomplete periods at the end of the night be removed? Default: F.<br />
 <code>plot</code> logical: should a plot for the result of the detection procedure be generated and saved? Default: T.<br />
 <code>REMP_length</code> numeric value specifying the minimum duration of a REM period. Default is 10 segments (i.e. 5 minutes). Decreasing the min. length is not encouraged and should only be done following careful consideration</p>
 </div>
 </div>
 <div id="worked-example" class="section level3">
 <h3>Worked example</h3>
-<p>First, we install and load the package if we haven’t done so. We will install the latest GitHub, wherefore installation requires the <code>devtools</code> package to be installed first. Note that <code>install.github</code> will automatically check for changes.</p>
+<p>First, we install and load the package if we haven’t done so. We will install the latest version from GitHub, wherefore installation requires the <code>devtools</code> package to be installed first. Note that <code>install.github</code> will automatically check for changes.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="co">## First, we save your current workspace</span></span>
 <span id="cb1-2"><a href="#cb1-2"></a><span class="kw">save.image</span>(<span class="dt">file=</span><span class="kw">paste</span>(<span class="kw">tempdir</span>(), <span class="st">&quot;currsession.RData&quot;</span>, <span class="dt">sep =</span> <span class="st">&quot;/&quot;</span>))</span>
 <span id="cb1-3"><a href="#cb1-3"></a><span class="co">## make sure you start with a clean session, loaded packages might cause problems.</span></span>
