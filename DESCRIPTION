@@ -1,6 +1,6 @@
 Package: SleepCycles
 Title: Sleep Cycle Detection
-Version: 1.1.1
+Version: 1.1.2
 Authors@R: 
     person(given = "Christine",
            family = "Blume",
@@ -18,8 +18,8 @@ Depends: R (>= 2.10)
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2021-03-29 15:53:09 UTC; chris
+Packaged: 2021-04-25 21:43:53 UTC; chris
 Author: Christine Blume [aut, cre] (<https://orcid.org/0000-0003-2328-9612>)
 Maintainer: Christine Blume <christine.blume@sbg.ac.at>
 Repository: CRAN
-Date/Publication: 2021-03-29 16:32:17 UTC
+Date/Publication: 2021-04-25 22:00:02 UTC
