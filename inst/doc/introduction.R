@@ -7,11 +7,9 @@ knitr::opts_chunk$set(
 ## ----setup, echo = TRUE, results = 'hide', warning = FALSE, message = FALSE----
 ## First, we save your current workspace
 save.image(file=paste(tempdir(), "currsession.RData", sep = "/"))
-## make sure you start with a clean session, loaded packages might cause problems.
+## make sure you start with a clean session.
 rm(list = ls(all = TRUE))
-install.packages("devtools", repos = "http://cran.us.r-project.org")
-library(devtools)
-devtools::install_github("ChristineBlume/SleepCycles")
+install.packages("SleepCycles", repos = "http://cran.us.r-project.org")
 
 ## ----echo=TRUE, warning=FALSE, results='asis'---------------------------------
 library(SleepCycles)
