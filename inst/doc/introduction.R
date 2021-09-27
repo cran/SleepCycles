@@ -4,12 +4,12 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 
-## ----setup, echo = TRUE, results = 'hide', warning = FALSE, message = FALSE----
-## First, we save your current workspace
-save.image(file=paste(tempdir(), "currsession.RData", sep = "/"))
-## make sure you start with a clean session.
-rm(list = ls(all = TRUE))
-install.packages("SleepCycles", repos = "http://cran.us.r-project.org")
+## ----setup, echo = TRUE, results = 'hide', warning = FALSE, message = FALSE, eval = FALSE----
+#  ## First, we save your current workspace
+#  save.image(file=paste(tempdir(), "currsession.RData", sep = "/"))
+#  ## make sure you start with a clean session.
+#  rm(list = ls(all = TRUE))
+#  install.packages("SleepCycles", repos = "http://cran.us.r-project.org")
 
 ## ----echo=TRUE, warning=FALSE, results='asis'---------------------------------
 library(SleepCycles)
